@@ -1,36 +1,104 @@
-import { ADD_NOTE, EDIT_NOTE, REMOVE_NOTE, TOGGLE_GRID } from '../../../constants/actionTypes';
+import { FETCH_NOTE_FULFILLED, FETCH_NOTE_PENDING, FETCH_NOTE_REJECTED,
+        ADD_NOTE_FULFILLED, ADD_NOTE_PENDING, ADD_NOTE_REJECTED,
+        EDIT_NOTE_FULFILLED, EDIT_NOTE_PENDING, EDIT_NOTE_REJECTED,
+        REMOVE_NOTE_PENDING, REMOVE_NOTE_REJECTED, REMOVE_NOTE_FULFILLED, TOGGLE_GRID } from '../../../constants/actionTypes';
 
 const initialState = {
     notes: [],
+    isLoading: false,
+    isFinish: false,
+    isError: false,
     isGrid: false
 }
 
 export default notesReducer = (state = initialState, action) => {
     switch (action.type) {
-        case ADD_NOTE:
-            return {
-                notes: [...state.notes, action.payload],
-                isGrid: state.isGrid
-            }
+        /// FETCH NOTE ------------------
+        case FETCH_NOTE_PENDING:
+        return {
+            ...state,
+            isLoading: true
+        }
+        case FETCH_NOTE_FULFILLED: 
+        return {
+            ...state,
+            isLoading: false,
+            isFinish: true,
+            notes: action.payload.data
+        }
+        case FETCH_NOTE_REJECTED:
+        return {
+            ...state,
+            isLoading: false,
+            isError: true
+        }
 
-        case EDIT_NOTE:
-            return {
-                notes: state.notes.map(note =>
-                    (note.id == action.payload.id) ?
-                        action.payload :
-                        note
-                ),
-                isGrid: state.isGrid
-            }
+        /// ADD NOTE ------------------
+        case ADD_NOTE_PENDING:
+        return {
+            ...state,
+            isLoading: true
+        }
+        case ADD_NOTE_FULFILLED:
+        return {
+            ...state,
+            isLoading: false,
+            isFinish: true,
+            notes: [...state.notes, action.payload.data]
+        }
+        case ADD_NOTE_REJECTED:
+        return {
+            ...state,
+            isLoading: false,
+            isError: true
+        }
 
-        case REMOVE_NOTE:
-            return {
-                notes: state.notes.filter(note => note.id !== action.payload.id),
-                isGrid: state.isGrid
-            }
+        /// EDIT NOTE ------------------
+        case EDIT_NOTE_PENDING:
+        return {
+            ...state,
+            isLoading: true
+        }
+        case EDIT_NOTE_FULFILLED:
+        return {
+            ...state,
+            isLoading: false,
+            isFinish: true,
+            notes: state.notes.map(note => 
+                (note.id == action.payload.data.id) ? 
+                    action.payload.data : note
+            )
+        }
+        case EDIT_NOTE_REJECTED:
+        return {
+            ...state,
+            isLoading: false,
+            isError:true
+        }
+
+        /// REMOVE NOTE ------------------
+        case REMOVE_NOTE_PENDING:
+        return {
+            ...state,
+            isLoading: true
+        }
+        case REMOVE_NOTE_FULFILLED:
+        return {
+            ...state,
+            isLoading: false,
+            isFinish: true,
+            notes: state.notes.filter(note => note.id !== action.payload.data.id)
+        }
+        case REMOVE_NOTE_REJECTED:
+        return {
+            ...state,
+            isLoading: false,
+            isError: true
+        }
 
         case TOGGLE_GRID:
             return {
+                ...state,
                 notes: [...state.notes],
                 isGrid: !state.isGrid
             }

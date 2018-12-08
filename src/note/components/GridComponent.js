@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import { Text, Card, CheckBox } from 'native-base';
 import { withNavigation } from 'react-navigation';
 
@@ -67,42 +67,44 @@ class GridComponent extends Component {
     render() {
         const item = this.props.item;
         return (
-            <Card key={item.id} style={{ width: "49%", heigth: 100, marginHorizontal: 5 }} onPress={() => {
+            <TouchableOpacity key={item.id} style={{ width: "47%", heigth: 100, marginHorizontal: 5 }} onPress={() => {
                 this.props.navigation.navigate("EditNote", {
-                    id: item.id,
-                    date: item.date,
-                    text: item.text
-                })
-            }}>
-                <View style={{ padding: 5, height: 100, justifyContent: "space-between" }}>
-                    <View>
-                        <Text numberOfLines={1} style={{ textAlign: "center", fontWeight: "bold", marginBottom: 5 }}>{item.text.split('\n')[0]}</Text>
-                        <Text numberOfLines={2} style={{ color: "#949494", textAlign: "center" }}>
-                            {
-                                item.text.split('\n')[1] === undefined ?
+                        id: item.id,
+                        date: item.date,
+                        text: item.text
+                    })
+                }}>
+                <Card >
+                    <View style={{ padding: 5, height: 100, justifyContent: "space-between" }}>
+                        <View>
+                            <Text numberOfLines={1} style={{ textAlign: "center", fontWeight: "bold", marginBottom: 5 }}>{item.text.split('\n')[0]}</Text>
+                            <Text numberOfLines={2} style={{ color: "#949494", textAlign: "center" }}>
+                                {
+                                    item.text.split('\n')[1] === undefined ?
                                     "No additional text" :
                                     item.text.split('\n')[1]
-                            }
-                        </Text>
-                    </View>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                        <Text numberOfLines={1} style={{ fontSize: 13, color: "#949494", width: "50%" }}>
-                            {this.formatDate(item.date)}
-                        </Text>
-                        {
-                            this.props.toggle ?
+                                }
+                            </Text>
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                            <Text numberOfLines={1} style={{ fontSize: 13, color: "#949494", width: "50%" }}>
+                                {this.formatDate(item.date)}
+                            </Text>
+                            {
+                                this.props.toggle ? 
                                 <CheckBox checked={this.state.checked}
-                                    style={{ marginRight: 10 }} onPress={
-                                        () => {
-                                            this.props.selectId(item.id)
-                                            this.setState({ checked: !this.state.checked })
-                                        }
-                                    } />
+                                style={{ marginRight: 10 }} onPress={
+                                    () => {
+                                        this.props.selectId(item.id)
+                                        this.setState({ checked: !this.state.checked })
+                                    }
+                                } />
                                 : null
-                        }
+                            }
+                        </View>
                     </View>
-                </View>
-            </Card>
+                </Card>
+            </TouchableOpacity>
         );
     }
 }

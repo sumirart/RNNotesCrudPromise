@@ -69,12 +69,13 @@ class ListComponent extends Component {
         return (
             <ListItem key={this.props.note.id} onPress={() => {
                 this.props.navigation.navigate("EditNote", {
+                    nama: "tama",
                     id: this.props.note.id,
                     date: this.props.note.date,
                     text: this.props.note.text
                 })
             }}>
-                {this.props.toggle ?
+                {this.props.toggle ? 
                     <CheckBox checked={this.state.checked}
                         onPress={
                             () => {

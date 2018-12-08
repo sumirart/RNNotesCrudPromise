@@ -2,21 +2,21 @@ import React, { Component } from 'react';
 import { View, ListView, Alert, FlatList } from 'react-native';
 import { Container, Content, Button, Icon, List, Header, Title, Left, Body, Right, Text, Footer, FooterTab } from 'native-base';
 import { connect } from 'react-redux';
-import axios from 'axios'
 
-// IMPORT COMPONENT AND ACTIONS
-// import Note from '../components/Note';
-import { toggleGrid } from '../../public/redux/actions/note'
-import { removeNotes } from '../../public/redux/actions/note'
+import { fetch, removeNote, removeAllNotes, toggleGrid } from '../../public/redux/actions/note';
+
 
 const mapStateToProps = state => ({
     notes: state.notes,
     isGrid: state.isGrid
 })
 
+// map dispatch to trigger actions to this.props
 const mapDispatchToProps = dispatch => ({
+    fetch: () => dispatch(fetch()),
+    removeNote: id => dispatch(removeNote(id)),
+    removeAllNotes: _ => dispatch(removeAllNotes()),
     toggleGrid: () => dispatch(toggleGrid()),
-    removeNotes: note => dispatch(removeNotes(note)),
 })
 
 
@@ -25,50 +25,49 @@ import ListComponent from '../components/ListComponent';
 import GridComponent from '../components/GridComponent';
 
 
-const IP = 'http://192.168.0.13:3000/notes';
-
-
-
 class HomeScreen extends Component {
     constructor() {
         super();
         this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
         this.state = {
-            data: [],
             selectedId: [],
             toggle: false,
-            selectNone: false
+            selectNone: false,
+            refresh: false
         };
     }
 
+    // remove title bar
     static navigationOptions = {
         header: null
     };
 
+    // fetch data at first mount and re-fetch data after going back to Home
     componentDidMount() {
-        this.getData();
+        this.props.fetch();
     }
 
-    componentWillUpdate() {
-        this.getData();
+    shouldComponentUpdate(newProps){
+        if(this.props.notes.notes !== newProps.notes.notes){
+            this.setState({ refresh: !this.state.refresh })       
+            console.log("COMPONENT UPDATED CUY!")
+            return true;
+        } else { return false }
     }
-
-    // componentDidUpdate() {
-    //     this.getData();
-    // }
 
 
     // TOGGLE EDIT BUTTON
     toggleEdit = () => {
         if (this.state.toggle === false) {
             this.setState({ toggle: true })
+            alert("trueeee")
         } else {
             this.setState({ toggle: false, selectedId: [] })
+            alert("false")
         }
-        // this.setState({ toggle: !this.state.toggle })
     }
 
-    // SELECTED ID
+    // SELECTED ID, add selected id to state
     selectId = (id) => {
         const index = this.state.selectedId.indexOf(id);
         if (index === -1) {
@@ -83,58 +82,16 @@ class HomeScreen extends Component {
         }
     }
 
-
-    // AXIOS METHOD --------------------
-    // GET ALL
-    getData = () => {
-        axios.get(IP)
-            .then((response) => {
-                this.setState({ data: response.data });
-                // console.log('response GET: ' + response);
-            })
-            .catch(err => {
-                console.log(err);
-            })
-    }
-
-    // DELETE ALL
-    removeAll = () => {
-        axios.delete(IP)
-            .then(res => {
-                // console.log('success delete all: ' + res);
-            })
-            .catch(err => {
-                console.log(err);
-            })
-
-        this.setState({ data: [] })
-    }
-
-    // DELETE BY ID
-    removeNote = (id) => {
-        axios.delete(IP + '/' + id)
-            .then(res => {
-                // console.log('success delete: ' + res);
-            })
-            .catch(err => {
-                console.log(err);
-            })
-        this.getData();
-    }
-
-
     // DELETE NOTES
     deleteNote = () => {
-        // const self = this.props;
-        // If no selected note, delete all
+        // If there is no selected note, delete all
         if (this.state.selectedId.length === 0) {
-            this.removeAll();
+            this.props.removeAllNotes();
             this.toggleEdit()
         } else {
             // if there is selected note, delete selected
             this.state.selectedId.map(e => {
-                this.removeNote(e);
-                // this.props.removeNotes(e);
+                this.props.removeNote(e);
                 this.setState({ selectedId: [], toggle: false, selectNone: true })
             })
         }
@@ -184,7 +141,8 @@ class HomeScreen extends Component {
                     text: "YES", onPress: () => {
                         // console.log("Confirm delete");
                         // this.deleteSingleNote(note);
-                        this.removeNote(note)
+                        // this.removeNote(note)
+                        this.props.removeNote(note)
                     }
                 }
             ],
@@ -208,7 +166,7 @@ class HomeScreen extends Component {
                     </Body>
                     <Right>
                         {/* If no notes disabled "Edit" button */}
-                        {this.state.data.length < 1 ?
+                        {this.props.notes.notes.length < 1 ?
                             (
                                 <Button hasText transparent>
                                     <Text style={{ color: "#949494" }}>
@@ -219,7 +177,9 @@ class HomeScreen extends Component {
                             ) :
                             // If there is note toggleEdit()
                             (
-                                <Button hasText transparent onPress={() => this.toggleEdit()}>
+                                <Button hasText transparent onPress={() => {
+                                    this.toggleEdit();
+                                    }}>
                                     <Text style={{ color: "black" }}>
                                         {this.state.toggle ? "Cancel" : "Edit"}
                                     </Text>
@@ -231,11 +191,19 @@ class HomeScreen extends Component {
 
                 {/* CONTAINER------------------------------ */}
                 <Content>
+                <Button hasText transparent onPress={() => {
+                    this.setState({ refresh: !this.state.refresh })
+                    console.log("Refresh pressed!")
+                    console.log(this.state.refresh)
+                }}>
+                                        <Text>Refresh</Text>
+                                        </Button>
                     {this.props.notes.isGrid ?
                         <View style={{ marginHorizontal: 10 }}>
                             <FlatList
                                 numColumns={2}
-                                data={this.state.data}
+                                data={this.props.notes.notes}
+                                extraData={this.state}
                                 keyExtractor={(item, index) => item.id}
                                 renderItem={({ item }) => (
                                     <GridComponent
@@ -252,9 +220,9 @@ class HomeScreen extends Component {
                             rightOpenValue={-75}
                             disableRightSwipe={true}
                             closeOnRowBeginSwipe={true}
-                            dataSource={this.ds.cloneWithRows(this.state.data)}
+                            dataSource={this.ds.cloneWithRows(this.props.notes.notes)}
                             renderRow={data =>
-                                <List>
+                                // <List>
                                     <ListComponent
                                         selectNone={this.state.selectNone}
                                         note={data}
@@ -262,7 +230,7 @@ class HomeScreen extends Component {
                                         selectId={this.selectId}
                                         style={{ marginLeft: 15 }}
                                     />
-                                </List>
+                                // </List>
                             }
                             renderRightHiddenRow={(data, secId, rowId, rowMap) =>
                                 <Button full danger onPress={_ => {
@@ -304,10 +272,10 @@ class HomeScreen extends Component {
                             <Text style={{ color: "black" }} >
                                 {
                                     // Show length() of notes
-                                    this.state.data.length
+                                    this.props.notes.notes.length
                                 }{
                                     // "note" for 0 and 1, "notes" for 2 or more
-                                    this.state.data.length < 2 ? " Note" : " Notes"
+                                    this.props.notes.notes.length < 2 ? " Note" : " Notes"
                                 }
                             </Text>
                         </Body>

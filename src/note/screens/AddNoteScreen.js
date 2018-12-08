@@ -5,7 +5,17 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import uuidv1 from 'uuid'; //generate random id
 import { AndroidBackHandler } from 'react-navigation-backhandler'; // handle back button
 import { connect } from 'react-redux';
-import axios from 'axios'
+// import axios from 'axios'
+
+// IMPORT ACTION AND MAPDIPATCHTOPROPS
+import { addNote } from '../../public/redux/actions/note';
+
+const mapDispatchToProps = dispatch => {
+    return {
+        addNote: note => dispatch(addNote(note))
+    }
+}
+
 
 class AddNoteScreen extends Component {
     constructor() {
@@ -14,17 +24,6 @@ class AddNoteScreen extends Component {
             text: '',
             hasFocused: false
         }
-    }
-
-    // AXIOS ADD NEW NOTE
-    addNewNote = (data) => {
-        axios.post('http://192.168.0.13:3000/notes', data)
-            .then(response => {
-                console.log(response);
-            })
-            .catch(err => {
-                console.log(err);
-            })
     }
 
     // SET NAVIGATION TO ACCESS METHOD
@@ -41,8 +40,7 @@ class AddNoteScreen extends Component {
         const date = Date();
 
         if (this.state.text !== '') {
-            this.addNewNote({ id, text, date })
-            // this.props.addNotes({ id, text, date })
+            this.props.addNote({ id, text, date })
             this.props.navigation.pop();
         } else {
             this.props.navigation.pop()
@@ -106,10 +104,8 @@ class AddNoteScreen extends Component {
     }
 }
 
-export default AddNoteScreen;
+export default connect(null, mapDispatchToProps)(AddNoteScreen);
 // export default connect(null, mapDispatchToProps)(AddNoteScreen);
-
-
 // REDUX RELATED COMPONENT
 
 // // IMPORT ACTIONS
@@ -121,3 +117,15 @@ export default AddNoteScreen;
 //         addNotes: note => dispatch(addNotes(note))
 //     }
 // }
+
+
+    // // AXIOS ADD NEW NOTE
+    // addNewNote = (data) => {
+    //     axios.post('http://192.168.0.13:3000/notes', data)
+    //         .then(response => {
+    //             console.log(response);
+    //         })
+    //         .catch(err => {
+    //             console.log(err);
+    //         })
+    // }

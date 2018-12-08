@@ -1,23 +1,31 @@
 import React, { Component } from "react";
-import { Container, Content, Textarea, Form } from 'native-base';
+import { Container, Content, Textarea, Form, Button } from 'native-base';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { AndroidBackHandler } from 'react-navigation-backhandler'; // handle back button
 import { connect } from 'react-redux';
-import axios from 'axios';
+
+// IMPORT ACTIONS AND MAPDISPATCHTOPROPS
+import { editNote } from '../../public/redux/actions/note';
+const mapDispatchToProps = dispatch => {
+    return {
+        editNote: (id, data) => dispatch(editNote(id, data))
+    }
+}
 
 class EditNoteScreen extends Component {
     constructor() {
         super();
         this.state = {
             id: '',
-            text: ''
+            text: '',
+            changed: false
         }
     }
 
     // SET NAVIGATION TO ACCESS METHOD
     componentDidMount() {
         this.props.navigation.setParams({
-            editNote: this.editNote
+            saveNote: this.saveNote
         });
         const { navigation } = this.props;
         const id = navigation.getParam('id');
@@ -25,49 +33,39 @@ class EditNoteScreen extends Component {
         this.setState({ id, text })
     }
 
-    // AXIOS UPDATE NOTE
-    updateNote = (id, data) => {
-        // console.log(data);
-        axios.put('http://192.168.0.13:3000/notes/' + id, data)
-            .then(response => {
-                console.log(response);
-            })
-            .catch(err => {
-                console.log(err);
-            })
-    }
-
     // SAVE TO REDUX
-    editNote = () => {
+    saveNote = () => {
         const text = this.state.text;
         const id = this.state.id;
         const date = Date();
 
-        if (this.state.text !== '') {
-            this.updateNote(id, { text, date });
-            // this.props.editNotes({ id, text, date })
+        // if (this.state.text !== '') {
+        if (this.state.changed) {
+            this.props.editNote(id, { text, date });
             this.props.navigation.pop();
         } else {
-            this.props.navigation.pop()
+            this.props.navigation.pop();
         }
     }
 
     // CUSTOM BACK BUTTON (ALSO SAVE) ON HEADER
     static navigationOptions = ({ navigation }) => {
-        const { params = {} } = navigation.state;
+        console.log(navigation.getParam('saveNote'));
         return {
             headerLeft: (
-                <Icon name="arrow-back" size={25}
-                    style={{ margin: 15 }}
-                    onPress={() => params.editNote()}
-                />
+                // <Button }>
+                    <Icon name="arrow-back" size={25}
+                        style={{ margin: 15 }}
+                        onPress={() => navigation.getParam('saveNote')()}
+                    />
+                // </Button>
             )
         }
     }
 
     // HANDLE WHEN BACK KEY PRESSES
     onBackButtonPressAndroid = () => {
-        this.editNote();
+        this.saveNote();
         this.props.navigation.pop();
         return true;
     };
@@ -93,9 +91,9 @@ class EditNoteScreen extends Component {
                             <Textarea
                                 autoFocus={true}
                                 value={this.state.text}
-                                onChangeText={(text) =>
-                                    this.setState({ text })
-                                }
+                                onChangeText={(text) => {
+                                    this.setState({ text, changed: true })
+                                }}
                                 style={{ fontSize: 16, padding: 15, textAlign: "left" }}
                                 rowSpan={22}
                             />
@@ -107,18 +105,4 @@ class EditNoteScreen extends Component {
     }
 }
 
-export default EditNoteScreen;
-// export default connect(null, mapDispatchToProps)(EditNoteScreen);
-
-
-// REDUX RELATED METHODS
-
-// // IMPORT ACTIONS
-// import { editNotes } from '../../public/redux/actions/note';
-
-// // MAP DISPATCH TO PROPS
-// const mapDispatchToProps = dispatch => {
-//     return {
-//         editNotes: note => dispatch(editNotes(note))
-//     }
-// }
+export default connect(null, mapDispatchToProps)(EditNoteScreen);
